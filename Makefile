@@ -1,14 +1,17 @@
 COMMON=ftp_common.c
-SERVER=ftpd.c
-CLIENT=ftpc.c
+SERVER_FILE=ftpd.c
+CLIENT_FILE=ftpc.c ftpc_quit.c
 
-all: server client
+SERVER=myftpd
+CLIENT=myftpc
 
-server: $(SERVER) $(COMMON)
-	gcc $(SERVER) $(COMMON) -o ftpd
+all: $(SERVER) $(CLIENT)
 
-client: $(CLIENT) $(COMMON)
-	gcc $(CLIENT) $(COMMON) -o ftpc
+$(SERVER): $(SERVER_FILE) $(COMMON)
+	gcc $(SERVER_FILE) $(COMMON) -o $(SERVER)
+
+$(CLIENT): $(CLIENT_FILE) $(COMMON)
+	gcc $(CLIENT_FILE) $(COMMON) -o $(CLIENT)
 
 clean:
-	rm -rf ftpd ftpc
+	rm -rf $(SERVER) $(CLIENT)

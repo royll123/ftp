@@ -6,10 +6,32 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include "ftp_common.h"
+#include "ftpc_commands.h"
 
 #define STAT_INITIAL		0
 #define STAT_WAIT_INPUT		1
 #define STAT_WAIT_REPLY		2
+
+struct command_table{
+	char *cmd;
+	void (*func)(int, int, char**);
+}cmd_tbl[] = {
+	{"quit",	run_quit},
+	{"pwd",		NULL},
+	{"cd",		NULL},
+	{"dir",		NULL},
+	{"lpwd",	NULL},
+	{"lcd",		NULL},
+	{"ldir",	NULL},
+	{"get",		NULL},
+	{"put",		NULL},
+	{"help",	NULL},
+	{NULL,		NULL}
+};
+
+int find_func(char*);
+
+void getargs(int*, char*[], char*);
 
 int main(int argc, char* argv[])
 {
@@ -21,6 +43,10 @@ int main(int argc, char* argv[])
 	char pkt[sizeof(struct myftph)+1];
 	struct myftph header;
 	struct myftph_data header_data;
+
+	char input[216];
+	int agc, func;
+	char *agv[24];
 
 	if(inet_pton(AF_INET, argv[1], &ipaddr) != 1){
 		fprintf(stderr, "wrong server_ip_address\n");
@@ -36,7 +62,7 @@ int main(int argc, char* argv[])
 	bzero(&skt, sizeof(skt));
 	skt.sin_family = PF_INET;
 	skt.sin_port = htons(FTP_PORT);
-	skt.sin_addr.s_addr = htonl(ipaddr.s_addr);
+	skt.sin_addr.s_addr = ipaddr.s_addr;
 
 	stat = STAT_INITIAL;
 
@@ -49,11 +75,28 @@ int main(int argc, char* argv[])
 				}
 
 				stat = STAT_WAIT_INPUT;
-				printf("changed\n");
 				break;
 
 			case STAT_WAIT_INPUT:
-					bzero(&header, sizeof(header));
+				printf("myFTP%%");
+				bzero(input, sizeof(input));
+				if(fgets(input, sizeof(input), stdin) == NULL){
+					putchar('\n');
+					return 0;
+				}
+				input[strlen(input)-1] = '\0';
+				if(*input == '\0') break;
+				getargs(&agc, agv, input);
+				printf("after getargs\n");
+				func = find_func(agv[0]);
+				printf("after find_func\n");
+				printf("argc:%d\n", agc);
+				if(cmd_tbl[func].cmd == NULL){
+					fprintf(stderr, "command not found: %s\n", agv[0]);
+				} else {
+					cmd_tbl[func].func(s, agc, agv);
+				}
+				/*bzero(&header, sizeof(header));
 					header.type = 3;
 					header.code = 2;
 					create_ftp_packet(&header, pkt, sizeof(pkt));
@@ -63,7 +106,7 @@ int main(int argc, char* argv[])
 						exit(1);
 					}
 					sleep(100);
-					exit(0);
+					exit(0);*/
 				break;
 		}
 	}
@@ -72,4 +115,36 @@ int main(int argc, char* argv[])
 		perror("close");
 		exit(1);
 	}
+}
+
+int find_func(char* cmd)
+{
+	int i = 0;
+	while(cmd_tbl[i].cmd != NULL){
+		if(strcmp(cmd_tbl[i].cmd,cmd) == 0){
+			break;
+		}
+		i++;
+	}
+
+	return i;
+}
+
+void getargs(int* argc, char* argv[], char* p)
+{
+	*argc = 0;
+
+	while(1){
+		while(*p == ' ' || *p == '\t' || *p == '\n')
+			p++;
+		if(*p == '\0') break;
+
+		argv[(*argc)++] = p;
+
+		while(*p != ' ' && *p != '\t' && *p != '\n' && *p != '\0')
+			p++;
+		if(*p == '\0') break;
+		*p++ = '\0';
+	}
+	argv[(*argc)] = NULL;
 }

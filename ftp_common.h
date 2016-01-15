@@ -23,6 +23,7 @@
 
 #define FTP_PORT	50021
 
+#define HEADER_SIZE	4
 #define DATASIZE	1024
 
 struct myftph {
