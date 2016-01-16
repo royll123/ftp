@@ -24,7 +24,7 @@ void run_pwd(int s, char* arg)
 	} else {
 		header.type = FTP_TYPE_OK;
 		header.length = strlen(path);
-		create_ftp_packet_data(&header, path, buf, strlen(path));
+		create_ftp_packet_data(&header, path, buf);
 		pkt_size = HEADER_SIZE + strlen(path);
 	}
 

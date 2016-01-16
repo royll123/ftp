@@ -6,6 +6,8 @@
 
 void run_quit(int, int, char*[]);
 void run_pwd(int, int, char*[]);
+void run_cd(int, int, char*[]);
+void run_dir(int, int, char*[]);
 
 // fms
 int stat;

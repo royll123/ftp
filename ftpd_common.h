@@ -10,5 +10,7 @@ int stat;
 
 void run_quit(int, char*);
 void run_pwd(int, char*);
+void run_cd(int, char*);
+void run_list(int, char*);
 
 

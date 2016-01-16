@@ -40,7 +40,7 @@ struct myftph_data {
 };
 
 void create_ftp_packet(struct myftph*, char*);
-void create_ftp_packet_data(struct myftph*, char*, char*, int);
+void create_ftp_packet_data(struct myftph*, char*, char*);
 void read_ftp_packet(struct myftph*, char*);
 void read_ftp_packet_data(struct myftph*, char*, char*);
 #endif

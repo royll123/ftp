@@ -14,8 +14,8 @@ struct command_table{
 }cmd_tbl[] = {
 	{"quit",	run_quit},
 	{"pwd",		run_pwd},
-	{"cd",		NULL},
-	{"dir",		NULL},
+	{"cd",		run_cd},
+	{"dir",		run_dir},
 	{"lpwd",	NULL},
 	{"lcd",		NULL},
 	{"ldir",	NULL},

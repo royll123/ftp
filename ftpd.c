@@ -13,7 +13,8 @@ struct command_table{
 }cmd_tbl[] = {
 	{FTP_TYPE_CMD_QUIT,	run_quit},
 	{FTP_TYPE_CMD_PWD,	run_pwd},
-	{FTP_TYPE_CMD_CWD,	NULL},
+	{FTP_TYPE_CMD_CWD,	run_cd},
+	{FTP_TYPE_CMD_LIST, run_list},
 	{FTP_TYPE_CMD_RETR,	NULL},
 	{FTP_TYPE_CMD_STOR,	NULL},
 	{-1, NULL}
@@ -80,7 +81,11 @@ int main(int argc, char* argv[])
 				if(cmd_tbl[cmd_type].type == -1){
 					// invalid type of ftp header
 				} else {
-					cmd_tbl[cmd_type].func(s2,NULL);
+					if(header.length == 0){
+						cmd_tbl[cmd_type].func(s2, NULL);
+					} else {
+						cmd_tbl[cmd_type].func(s2, ftp_data);
+					}
 				}
 				break;
 			}
