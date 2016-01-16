@@ -3,10 +3,29 @@
 #include "ftp_common.h"
 
 
-void create_ftp_packet(struct myftph* h, char *p, int size)
+void create_ftp_packet(struct myftph* h, char *p)
 {
-	snprintf(p, size, "%d%d%02d", h->type, h->code, h->length);
-	printf("%s\n", p);
+	int i, mask;
+	uint8_t l_upper = h->length/0x100;
+	p[0] = h->type;
+	p[1] = h->code;
+	p[2] = l_upper;
+	p[3] = (uint8_t)h->length;
+
+	for(i = 0; i < 4; i++){
+		printf("%02X", p[i]);
+	}
+	printf("\n");
+}
+
+void create_ftp_packet_data(struct myftph* h, char *d, char *p, int size)
+{
+	int i;
+	create_ftp_packet(h, p);
+
+	for(i = 0; i < size; i++){
+		p[4+i] = d[i];
+	}
 }
 
 void read_ftp_packet(struct myftph* h, char *p)
@@ -15,9 +34,23 @@ void read_ftp_packet(struct myftph* h, char *p)
 	uint8_t n[4];
 
 	for(i = 0; i < 4; i++){
-		n[i] = (uint8_t)(p[i]-'0');
+		printf("%02X", p[i]);
+		n[i] = (uint8_t)(p[i]);
 	}
+	printf("\n");
 	h->type = n[0];
 	h->code = n[1];
-	h->length = n[2]*10+n[3];
+	h->length = (uint16_t)n[2]*0x100+n[3];
+}
+
+void read_ftp_packet_data(struct myftph* h, char *p, char *d)
+{
+	int i;
+	read_ftp_packet(h, p);
+
+	for(i = 0; i < h->length; i++){
+		*d++ = *(p+HEADER_SIZE);
+		p++;
+	}
+	*d = '\0';
 }

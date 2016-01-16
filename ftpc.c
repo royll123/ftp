@@ -8,16 +8,12 @@
 #include "ftp_common.h"
 #include "ftpc_commands.h"
 
-#define STAT_INITIAL		0
-#define STAT_WAIT_INPUT		1
-#define STAT_WAIT_REPLY		2
-
 struct command_table{
 	char *cmd;
 	void (*func)(int, int, char**);
 }cmd_tbl[] = {
 	{"quit",	run_quit},
-	{"pwd",		NULL},
+	{"pwd",		run_pwd},
 	{"cd",		NULL},
 	{"dir",		NULL},
 	{"lpwd",	NULL},
@@ -35,7 +31,7 @@ void getargs(int*, char*[], char*);
 
 int main(int argc, char* argv[])
 {
-	int s, stat;
+	int s;
 	struct sockaddr_in skt;
 	struct in_addr ipaddr;
 
@@ -87,10 +83,7 @@ int main(int argc, char* argv[])
 				input[strlen(input)-1] = '\0';
 				if(*input == '\0') break;
 				getargs(&agc, agv, input);
-				printf("after getargs\n");
 				func = find_func(agv[0]);
-				printf("after find_func\n");
-				printf("argc:%d\n", agc);
 				if(cmd_tbl[func].cmd == NULL){
 					fprintf(stderr, "command not found: %s\n", agv[0]);
 				} else {
@@ -108,6 +101,13 @@ int main(int argc, char* argv[])
 					sleep(100);
 					exit(0);*/
 				break;
+
+			case STAT_QUIT:
+				if(close(s) < 0){
+					perror("close");
+					exit(1);
+				}
+				exit(0);
 		}
 	}
 

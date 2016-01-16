@@ -1,6 +1,6 @@
 COMMON=ftp_common.c
-SERVER_FILE=ftpd.c
-CLIENT_FILE=ftpc.c ftpc_quit.c
+SERVER_FILE=ftpd.c ftpd_*.c
+CLIENT_FILE=ftpc.c ftpc_*.c
 
 SERVER=myftpd
 CLIENT=myftpc

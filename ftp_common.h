@@ -39,6 +39,8 @@ struct myftph_data {
 	char data[DATASIZE];
 };
 
-void create_ftp_packet(struct myftph*, char*, int);
+void create_ftp_packet(struct myftph*, char*);
+void create_ftp_packet_data(struct myftph*, char*, char*, int);
 void read_ftp_packet(struct myftph*, char*);
+void read_ftp_packet_data(struct myftph*, char*, char*);
 #endif
