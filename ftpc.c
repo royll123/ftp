@@ -20,7 +20,7 @@ struct command_table{
 	{"lcd",		NULL},
 	{"ldir",	NULL},
 	{"get",		run_get},
-	{"put",		NULL},
+	{"put",		run_put},
 	{"help",	NULL},
 	{NULL,		NULL}
 };

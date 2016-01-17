@@ -14,6 +14,6 @@ void run_pwd(int, char*);
 void run_cd(int, char*);
 void run_list(int, char*);
 void run_retr(int, char*);
-
+void run_stor(int, char*);
 
 #endif
