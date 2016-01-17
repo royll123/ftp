@@ -15,7 +15,7 @@ struct command_table{
 	{FTP_TYPE_CMD_PWD,	run_pwd},
 	{FTP_TYPE_CMD_CWD,	run_cd},
 	{FTP_TYPE_CMD_LIST, run_list},
-	{FTP_TYPE_CMD_RETR,	NULL},
+	{FTP_TYPE_CMD_RETR,	run_retr},
 	{FTP_TYPE_CMD_STOR,	NULL},
 	{-1, NULL}
 };

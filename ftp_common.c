@@ -1,4 +1,6 @@
 #include <stdio.h>
+#include <stdlib.h>
+#include <strings.h>
 #include <netinet/in.h>
 #include "ftp_common.h"
 
@@ -53,4 +55,35 @@ void read_ftp_packet_data(struct myftph* h, char *p, char *d)
 		p++;
 	}
 	*d = '\0';
+}
+
+void send_simple_packet(int s, uint8_t type, uint8_t code)
+{
+	struct myftph header;
+	char buf[HEADER_SIZE];
+	bzero(&header, sizeof(header));
+	header.type = type;
+	header.code= code;
+	create_ftp_packet(&header, buf);
+
+	if(send(s, buf, HEADER_SIZE, 0) < 0){
+		perror("send");
+		exit(1);
+	}
+}
+
+void send_data_packet(int s, uint8_t type, uint8_t code, uint16_t length, char* data)
+{
+	struct myftph header;
+	char buf[HEADER_SIZE+DATASIZE];
+	bzero(&header, sizeof(header));
+	header.type = type;
+	header.code= code;
+	header.length = length;
+	create_ftp_packet_data(&header, data, buf);
+
+	if(send(s, buf, HEADER_SIZE+length, 0) < 0){
+		perror("send");
+		exit(1);
+	}
 }

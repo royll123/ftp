@@ -43,4 +43,7 @@ void create_ftp_packet(struct myftph*, char*);
 void create_ftp_packet_data(struct myftph*, char*, char*);
 void read_ftp_packet(struct myftph*, char*);
 void read_ftp_packet_data(struct myftph*, char*, char*);
+
+void send_simple_packet(int s, uint8_t type, uint8_t code);
+void send_data_packet(int s, uint8_t type, uint8_t code, uint16_t length, char* data);
 #endif

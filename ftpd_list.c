@@ -51,6 +51,7 @@ void run_list(int s, char* arg)
 			char* p_data = data;
 			int rest = DATASIZE;
 			while((file = readdir(dir)) != NULL){
+				if(strlen(file->d_name)+1 > rest) break;
 				strncpy(p_data, file->d_name, rest);
 				rest -= strlen(file->d_name)+1;
 				p_data += strlen(file->d_name);
