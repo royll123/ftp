@@ -16,12 +16,12 @@ struct command_table{
 	{"pwd",		run_pwd},
 	{"cd",		run_cd},
 	{"dir",		run_dir},
-	{"lpwd",	NULL},
-	{"lcd",		NULL},
-	{"ldir",	NULL},
+	{"lpwd",	run_lpwd},
+	{"lcd",		run_lcd},
+	{"ldir",	run_ldir},
 	{"get",		run_get},
 	{"put",		run_put},
-	{"help",	NULL},
+	{"help",	run_help},
 	{NULL,		NULL}
 };
 
