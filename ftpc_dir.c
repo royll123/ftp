@@ -34,7 +34,6 @@ void run_dir(int s, int argc, char* argv[])
 		exit(1);
 	}
 	read_ftp_packet(&header, buf);
-	printf("type:%d\n", header.type);
 
 	if(header.type == FTP_TYPE_OK){
 		while(1){
@@ -48,12 +47,12 @@ void run_dir(int s, int argc, char* argv[])
 				printf("%s\n", data);
 				if(header.code == 0x00) break;
 			} else{
-				// protocol error
-				fprintf(stderr, "Protocol error\n");
-				send_simple_packet(s, FTP_TYPE_CMD_ERR, 0x03);
+				fprintf(stderr, "Unexpected error occuered.\n");
 				break;
 			}
 		}
+	} else {
+		output_error(&header);
 	}
 }
 

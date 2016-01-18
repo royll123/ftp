@@ -24,8 +24,6 @@ void run_get(int s, int argc, char* argv[])
 	bzero(buf_data, sizeof(buf_data));
 	bzero(data, sizeof(data));
 
-	printf("get\n");
-
 	// set target files
 	if(argc == 2){
 		src = argv[1];
@@ -37,8 +35,6 @@ void run_get(int s, int argc, char* argv[])
 		fprintf(stderr, "Usage: get remote-file [local-file]\n");
 		return;
 	}
-
-	printf("set target files.\n");
 
 	// check create local file
 	if((fd = open(dst, O_WRONLY|O_CREAT|O_TRUNC)) < 0){
@@ -55,8 +51,6 @@ void run_get(int s, int argc, char* argv[])
 	}
 
 	read_ftp_packet(&header, buf);
-	printf("type:%d\n", header.type);
-	printf("code: %d\n", header.code);
 
 	if(header.type == FTP_TYPE_OK){
 		// receive file data
@@ -77,11 +71,15 @@ void run_get(int s, int argc, char* argv[])
 				if(header.code == 0x00){
 					break;
 				}
+			} else {
+				// protocol error
+				fprintf(stderr, "Error: received unexpected packet.\n");
+				break;
 			}
 		}
 	} else {
 		// error
-		fprintf(stderr, "error\n");
+		output_error(&header);
 	}
 
 	close(fd);
@@ -99,12 +97,8 @@ void get_dst_filename(char* src, char** dst)
 		src++;
 	src--;
 
-	printf("middle\n");
 	while(src != sp && (*src) != '/')
 		src--;
 
-	printf("before last copy\n");
-
 	(*dst) = src;
-	printf("finished filename copy\n");
 }

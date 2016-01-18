@@ -1,10 +1,15 @@
 #ifndef FTPC_COMMANDS_H
 #define FTPC_COMMANDS_H
 
+#include "ftp_common.h"
+
 #define STAT_INITIAL        0
 #define STAT_WAIT_INPUT     1
 #define STAT_WAIT_REPLY     2
 #define STAT_QUIT			3
+
+void output_error(struct myftph*);
+void output_errno(int);
 
 void run_quit(int, int, char*[]);
 void run_pwd(int, int, char*[]);

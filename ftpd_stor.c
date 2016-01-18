@@ -4,6 +4,7 @@
 #include <strings.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
 #include <sys/socket.h>
 #include "ftp_common.h"
 #include "ftpd_common.h"
@@ -27,8 +28,9 @@ void run_stor(int s, char* arg)
 	}
 
 	// check create local file
+	errno = 0;
 	if((fd = open(arg, O_WRONLY|O_CREAT|O_TRUNC)) < 0){
-		send_simple_packet(s, FTP_TYPE_CMD_ERR, 0x01);
+		send_err_packet(s, errno);
 		return;
 	}
 
@@ -52,8 +54,15 @@ void run_stor(int s, char* arg)
 			if(header.code == 0x00){
 				break;
 			}
+		} else {
+			// protocol error
+			send_simple_packet(s, FTP_TYPE_CMD_ERR, 0x03);
+			break;
 		}
 	}	
 
-	close(fd);
+	if(close(fd) < 0){
+		perror("close");
+		exit(1);
+	}
 }

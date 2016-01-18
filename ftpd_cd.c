@@ -10,35 +10,17 @@
 
 void run_cd(int s, char* arg)
 {
-	struct myftph header;
-	char buf[HEADER_SIZE];
-	bzero(&header, sizeof(header));
-	bzero(buf, sizeof(buf));
+	if(arg == NULL){
+		send_simple_packet(s, FTP_TYPE_CMD_ERR, 0x01);
+		return;
+	}
 
 	// change current directory
 	errno = 0;
-	printf("path: %s\n", arg);
 	if(chdir(arg) < 0){
-		// error
-		if(errno == ENOENT){
-			header.type = FTP_TYPE_FILE_ERR;
-			header.code = 0x00;
-		} else if(errno == EACCES){
-			header.type = FTP_TYPE_FILE_ERR;
-			header.code = 0x01;
-		} else {
-			header.type = FTP_TYPE_UNKWN_ERR;
-			header.code = 0x05;
-		}
+		send_err_packet(s, errno);
 	} else {
-		header.type = FTP_TYPE_OK;
-	}
-	
-	create_ftp_packet(&header, buf);
-
-	if(send(s, buf, HEADER_SIZE, 0) < 0){
-		perror("send");
-		exit(1);
+		send_simple_packet(s, FTP_TYPE_OK, 0x00);
 	}
 }
 

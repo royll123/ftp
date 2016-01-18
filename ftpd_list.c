@@ -32,7 +32,7 @@ void run_list(int s, char* arg)
 	errno = 0;
 	if(arg == NULL){
 		if(getcwd(tmp_path, sizeof(tmp_path)) == NULL){
-			err_handler(s, errno);
+			send_err_packet(s, errno);
 		} else {
 			path = tmp_path;
 		}
@@ -43,7 +43,7 @@ void run_list(int s, char* arg)
 	// open directory
 	if(path != NULL){
 		if((dir = opendir(path)) == NULL){
-			err_handler(s, errno);
+			send_err_packet(s, errno);
 		} else {
 			char* p_data = data;
 			char line[DATASIZE];
@@ -68,7 +68,7 @@ void run_list(int s, char* arg)
 					// send data block
 					p_data--;
 					(*p_data) = '\0';
-					send_data_packet(s, FTP_TYPE_DATA, 0x01, HEADER_SIZE+strlen(data), data);
+					send_data_packet(s, FTP_TYPE_DATA, 0x01, strlen(data), data);
 					p_data = data;
 					rest = DATASIZE;
 				}
@@ -82,21 +82,7 @@ void run_list(int s, char* arg)
 				p_data--;
 				(*p_data) = '\0';
 			}
-			send_data_packet(s, FTP_TYPE_DATA, 0x00, HEADER_SIZE+strlen(data), data);
+			send_data_packet(s, FTP_TYPE_DATA, 0x00, strlen(data), data);
 		}
-	}
-}
-
-void err_handler(int s, int no)
-{
-	if(no == EACCES){
-		// permission denied
-		send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x01);
-	} else if(no == ENOENT){
-		// directory does not exist
-		send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x00);
-	} else {
-		// unknown error
-		send_simple_packet(s, FTP_TYPE_UNKWN_ERR, 0x05);
 	}
 }

@@ -8,9 +8,7 @@
 #include <sys/types.h>
 #include <errno.h>
 #include <dirent.h>
-
-
-void ldir_err_handler(int);
+#include "ftpc_commands.h"
 
 void run_ldir(int s, int argc, char* argv[])
 {
@@ -27,7 +25,8 @@ void run_ldir(int s, int argc, char* argv[])
 		// set path
 		errno = 0;
 		if(getcwd(tmp_path, sizeof(tmp_path)) == NULL){
-			ldir_err_handler(errno);
+			output_errno(errno);
+			return;
 		} else {
 			path = tmp_path;
 		}
@@ -38,7 +37,7 @@ void run_ldir(int s, int argc, char* argv[])
 	// open directory
 	if(path != NULL){
 		if((dir = opendir(path)) == NULL){
-			ldir_err_handler(errno);
+			output_errno(errno);
 		} else {
 			struct stat st;
 			struct tm *t;
@@ -54,13 +53,3 @@ void run_ldir(int s, int argc, char* argv[])
 	}
 }
 
-void ldir_err_handler(int no)
-{
-	if(no == EACCES){
-		// permission denied
-	} else if(no == ENOENT){
-		// directory does not exist
-	} else {
-		// unknown error
-	}
-}

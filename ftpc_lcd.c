@@ -4,6 +4,7 @@
 #include <strings.h>
 #include <unistd.h>
 #include <errno.h>
+#include "ftpc_commands.h"
 
 void run_lcd(int s, int argc, char* argv[])
 {
@@ -17,10 +18,7 @@ void run_lcd(int s, int argc, char* argv[])
 	errno = 0;
 	if(chdir(argv[1]) < 0){
 		// error
-		if(errno == ENOENT){
-		} else if(errno == EACCES){
-		} else {
-		}
+		output_errno(errno);
 	}
 }
 

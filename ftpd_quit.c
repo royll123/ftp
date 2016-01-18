@@ -7,17 +7,7 @@
 
 void run_quit(int s, char* arg)
 {
-	struct myftph header;
-	char buf[HEADER_SIZE];
-	bzero(&header, sizeof(header));
-
-	header.type = FTP_TYPE_OK;
-	create_ftp_packet(&header, buf);
-
-	if(send(s, buf, HEADER_SIZE, 0) < 0){
-		perror("send");
-		exit(1);
-	}
+	send_simple_packet(s, FTP_TYPE_OK, 0x00);
 
 	state = STAT_QUIT;
 }

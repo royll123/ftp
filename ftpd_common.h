@@ -8,6 +8,7 @@
 // fms
 int state;
 
+void send_err_packet(int, int);
 
 void run_quit(int, char*);
 void run_pwd(int, char*);

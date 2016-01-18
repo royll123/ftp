@@ -87,3 +87,4 @@ void send_data_packet(int s, uint8_t type, uint8_t code, uint16_t length, char* 
 		exit(1);
 	}
 }
+

@@ -10,7 +10,6 @@
 #include "ftpc_commands.h"
 
 
-void put_err_handler(int, int);
 extern void get_dst_filename(char* src, char** dst);
 
 void run_put(int s, int argc, char* argv[])
@@ -40,7 +39,7 @@ void run_put(int s, int argc, char* argv[])
 	errno = 0;
 	if((fd = open(src, O_RDONLY)) < 0){
 		// error
-		put_err_handler(s, errno);
+		output_errno(errno);
 		return;
 	}
 
@@ -55,7 +54,7 @@ void run_put(int s, int argc, char* argv[])
 	}
 	read_ftp_packet(&header, buf);
 
-	if(header.type = FTP_TYPE_OK){
+	if(header.type == FTP_TYPE_OK){
 		// send data
 		while(1){
 			if((pkt_size = read(fd, data, DATASIZE)) < DATASIZE){
@@ -67,6 +66,8 @@ void run_put(int s, int argc, char* argv[])
 				send_data_packet(s, FTP_TYPE_DATA, 0x01, pkt_size, data);
 			}
 		}
+	} else {
+		output_error(&header);
 	}
 
 	if(close(fd) < 0){
@@ -74,30 +75,3 @@ void run_put(int s, int argc, char* argv[])
 		exit(1);
 	}
 }
-
-void put_err_handler(int s, int no)
-{
-	if(no == EACCES){
-		// permission denied
-		send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x01);
-	} else if(no == ENOENT){
-		// directory does not exist
-		send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x00);
-	} else {
-		// unknown error
-		send_simple_packet(s, FTP_TYPE_UNKWN_ERR, 0x05);
-	}
-}
-/*
-void get_dst_filename(char* src, char** dst)
-{
-    char* sp = src;
-    while((*src) != '\0')
-        src++;
-    src--;
-
-    while(src != sp && (*src) != '/')
-        src--;
-
-    (*dst) = src;
-}*/

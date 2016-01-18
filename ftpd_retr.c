@@ -9,17 +9,11 @@
 #include "ftp_common.h"
 #include "ftpd_common.h"
 
-
-void retr_err_handler(int, int);
-
 void run_retr(int s, char* arg)
 {
-	struct myftph header;
-	char buf[HEADER_SIZE+DATASIZE];
 	char data[DATASIZE];
 	size_t pkt_size;
 	int fd;
-	bzero(&header, sizeof(header));
 	bzero(data, sizeof(data));
 
 	// get directory path
@@ -28,13 +22,11 @@ void run_retr(int s, char* arg)
 		return;
 	}
 
-	printf("get directory path:%s\n", arg);
-
 	// open directory
 	errno = 0;
 	if((fd = open(arg, O_RDONLY)) < 0){
 		// error
-		retr_err_handler(s, errno);
+		send_err_packet(s, errno);
 		return;
 	} else {
 		// ok reply
@@ -49,7 +41,6 @@ void run_retr(int s, char* arg)
 			} else {
 				// continue to send
 				send_data_packet(s, FTP_TYPE_DATA, 0x01, pkt_size, data);
-			//	lseek(fd, pkt_size, SEEK_CUR);
 			}
 		}
 	}
@@ -57,19 +48,5 @@ void run_retr(int s, char* arg)
 	if(close(fd) < 0){
 		perror("close");
 		exit(1);
-	}
-}
-
-void retr_err_handler(int s, int no)
-{
-	if(no == EACCES){
-		// permission denied
-		send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x01);
-	} else if(no == ENOENT){
-		// directory does not exist
-		send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x00);
-	} else {
-		// unknown error
-		send_simple_packet(s, FTP_TYPE_UNKWN_ERR, 0x05);
 	}
 }
