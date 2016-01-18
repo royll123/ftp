@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
@@ -25,13 +26,15 @@ struct command_table{
 	{NULL,		NULL}
 };
 
-int find_func(char*);
+int s;
 
+int find_func(char*);
 void getargs(int*, char*[], char*);
+void close_handler(int);
+void set_signal();
 
 int main(int argc, char* argv[])
 {
-	int s;
 	struct sockaddr_in skt;
 	struct in_addr ipaddr;
 
@@ -147,4 +150,24 @@ void getargs(int* argc, char* argv[], char* p)
 		*p++ = '\0';
 	}
 	argv[(*argc)] = NULL;
+}
+
+void close_handler(int sig)
+{
+	if(close(s) < 0){
+		perror("close");
+		exit(1);
+	}
+}
+
+void set_signal()
+{
+	struct sigaction action;
+	action.sa_handler = &close_handler;
+	action.sa_flags = 0;
+
+	if(sigaction(SIGINT, &action, NULL) < 0){
+		perror("sigaction");
+		exit(1);
+	}
 }

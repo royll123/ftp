@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "ftp_common.h"
@@ -20,12 +21,15 @@ struct command_table{
 	{-1, NULL}
 };
 
+int s, s2;
 
 int getcmd(int);
+void close_handler(int);
+void set_signal();
 
 int main(int argc, char* argv[])
 {
-	int s, s2, r, backlog = 5;
+	int r, backlog = 5;
 	struct sockaddr_in myskt;
 	struct sockaddr_in skt;
 	socklen_t sktlen = sizeof(skt);
@@ -35,6 +39,8 @@ int main(int argc, char* argv[])
 	struct myftph header;
 	char ftp_data[DATASIZE+1];
 	
+	set_signal();
+
 	// socket
 	if((s = socket(PF_INET, SOCK_STREAM, 0)) == -1){
 		perror("socket");
@@ -63,9 +69,18 @@ int main(int argc, char* argv[])
 				if((s2 = accept(s, (struct sockaddr*)&skt, &sktlen)) < 0){
 					perror("accept");
 					exit(1);
+				} else {
+					pid_t pid = fork();
+					if(pid < 0){
+						perror("fork");
+						exit(1);
+					} else if(pid == 0){
+						stat = STAT_WAIT_COMMAND;
+					} else {
+						
+					}
 				}
-
-				stat = STAT_WAIT_COMMAND;
+				
 				break;
 			
 			case STAT_WAIT_COMMAND:
@@ -74,12 +89,14 @@ int main(int argc, char* argv[])
 				bzero(pkt_data, sizeof(pkt_data));
 				if((r = recv(s2, pkt_data, HEADER_SIZE+DATASIZE, 0)) < 0){
 					perror("recv");
+					close(s2);
 					exit(1);
 				}
 				read_ftp_packet_data(&header, pkt_data, ftp_data);
 				cmd_type = getcmd(header.type);
 				if(cmd_tbl[cmd_type].type == -1){
 					// invalid type of ftp header
+					send_simple_packet(s2, FTP_TYPE_CMD_ERR, 0x03);
 				} else {
 					if(header.length == 0){
 						cmd_tbl[cmd_type].func(s2, NULL);
@@ -116,4 +133,29 @@ int getcmd(int type)
 			i++;
 	}
 	return i;
+}
+
+void close_handler(int sig)
+{
+	if(close(s2) < 0){
+		perror("close");
+		exit(1);
+	}
+	
+	if(close(s) < 0){
+		perror("close");
+		exit(1);
+	}
+}
+
+void set_signal()
+{
+	struct sigaction act;
+	act.sa_handler = &close_handler;
+	act.sa_flags = 0;
+
+	if(sigaction(SIGINT, &act, NULL) < 0){
+		perror("sigaction");
+		exit(1);
+	}
 }
