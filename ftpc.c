@@ -63,17 +63,17 @@ int main(int argc, char* argv[])
 	skt.sin_port = htons(FTP_PORT);
 	skt.sin_addr.s_addr = ipaddr.s_addr;
 
-	stat = STAT_INITIAL;
+	state = STAT_INITIAL;
 
 	for(;;){
-		switch(stat){
+		switch(state){
 			case STAT_INITIAL:
 				if(connect(s, (struct sockaddr*)&skt, sizeof(skt)) < 0){
 					perror("connect");
 					exit(1);
 				}
 
-				stat = STAT_WAIT_INPUT;
+				state = STAT_WAIT_INPUT;
 				break;
 
 			case STAT_WAIT_INPUT:

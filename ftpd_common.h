@@ -6,7 +6,7 @@
 #define STAT_QUIT			3
 
 // fms
-int stat;
+int state;
 
 
 void run_quit(int, char*);

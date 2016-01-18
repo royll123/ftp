@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <errno.h>
 #include <signal.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -41,6 +42,25 @@ int main(int argc, char* argv[])
 	
 	set_signal();
 
+	// check arguments
+	errno = 0;
+	if(argc == 2){
+		if(chdir(argv[1]) < 0){
+			if(errno == EACCES){
+				fprintf(stderr, "Error: permission denied to access the directory\n");
+			} else if(errno == ENOENT){
+				fprintf(stderr, "Error: the directory does not exist.\n");
+			} else {
+				fprintf(stderr, "chdir: Unknown error\n");
+			}
+			exit(1);
+		}
+	} else if(argc != 1){
+		fprintf(stderr, "Usage: ./myftpd [DIR]\n");
+		exit(1);
+	}
+
+
 	// socket
 	if((s = socket(PF_INET, SOCK_STREAM, 0)) == -1){
 		perror("socket");
@@ -56,10 +76,10 @@ int main(int argc, char* argv[])
 		exit(1);
 	}
 
-	stat = STAT_WAIT_CONNECT;
+	state = STAT_WAIT_CONNECT;
 
 	for(;;){
-		switch(stat){
+		switch(state){
 			case STAT_WAIT_CONNECT:
 				if(listen(s, backlog) < 0){
 					perror("listen");
@@ -75,7 +95,7 @@ int main(int argc, char* argv[])
 						perror("fork");
 						exit(1);
 					} else if(pid == 0){
-						stat = STAT_WAIT_COMMAND;
+						state = STAT_WAIT_COMMAND;
 					} else {
 						
 					}

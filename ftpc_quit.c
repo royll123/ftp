@@ -19,7 +19,7 @@ void run_quit(int s, int argc, char* argv[])
 		exit(1);
 	}
 
-	stat = STAT_QUIT;
+	state = STAT_QUIT;
 }
 
 

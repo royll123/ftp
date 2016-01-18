@@ -17,7 +17,8 @@ void run_lpwd(int, int, char*[]);
 void run_lcd(int, int, char*[]);
 void run_ldir(int, int, char*[]);
 void run_help(int, int, char*[]);
+
 // fms
-int stat;
+int state;
 
 #endif

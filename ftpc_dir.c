@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <strings.h>
+#include <unistd.h>
 #include <sys/socket.h>
 #include "ftp_common.h"
 #include "ftpc_commands.h"
@@ -9,7 +10,7 @@
 void run_dir(int s, int argc, char* argv[])
 {
 	struct myftph header;
-	char buf[HEADER_SIZE+DATASIZE];
+	char buf[HEADER_SIZE];
 	char buf_data[HEADER_SIZE+DATASIZE];
 	char data[DATASIZE+1];
 	int pkt_size;
@@ -20,30 +21,40 @@ void run_dir(int s, int argc, char* argv[])
 
 	header.type = FTP_TYPE_CMD_LIST;
 	if(argc == 2){
-		header.length = strlen(argv[1]);
-		create_ftp_packet_data(&header, argv[1], buf);
-		pkt_size = HEADER_SIZE+header.length;
+		send_data_packet(s, FTP_TYPE_CMD_LIST, 0x00, strlen(argv[1]), argv[1]);
 	} else if(argc == 1){
-		create_ftp_packet(&header, buf);
-		pkt_size = HEADER_SIZE;
+		send_simple_packet(s, FTP_TYPE_CMD_LIST, 0x00);
 	} else {
 		fprintf(stderr, "Usage: dir [dir_path]\n");
 		return;
 	}
 
-	if(send(s, buf, pkt_size, 0) < 0){
-		perror("send");
-		exit(1);
-	}
-
-	if(recv(s, buf_data, HEADER_SIZE+DATASIZE, 0) < 0){
+	if(recv(s, buf, HEADER_SIZE, 0) < 0){
 		perror("recv");
 		exit(1);
 	}
-	read_ftp_packet_data(&header, buf_data, data);
+	read_ftp_packet(&header, buf);
 	printf("type:%d\n", header.type);
-	printf("length: %d\n", header.length);
-	printf("data:%s\n", data);
+
+	if(header.type == FTP_TYPE_OK){
+		while(1){
+			if(recv(s, buf_data, HEADER_SIZE+DATASIZE, 0) < 0){
+				perror("recv");
+				close(s);
+				exit(1);
+			}
+			read_ftp_packet_data(&header, buf_data, data);
+			if(header.type == FTP_TYPE_DATA){
+				printf("%s\n", data);
+				if(header.code == 0x00) break;
+			} else{
+				// protocol error
+				fprintf(stderr, "Protocol error\n");
+				send_simple_packet(s, FTP_TYPE_CMD_ERR, 0x03);
+				break;
+			}
+		}
+	}
 }
 
 

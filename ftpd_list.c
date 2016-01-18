@@ -5,12 +5,15 @@
 #include <unistd.h>
 #include <errno.h>
 #include <dirent.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <sys/types.h>
 #include <sys/socket.h>
 #include "ftp_common.h"
 #include "ftpd_common.h"
 
 
-void err_handler(int, struct myftph*);
+void err_handler(int, int);
 
 void run_list(int s, char* arg)
 {
@@ -29,9 +32,7 @@ void run_list(int s, char* arg)
 	errno = 0;
 	if(arg == NULL){
 		if(getcwd(tmp_path, sizeof(tmp_path)) == NULL){
-			err_handler(errno, &header);
-			create_ftp_packet(&header, buf);
-			pkt_size = HEADER_SIZE;
+			err_handler(s, errno);
 		} else {
 			path = tmp_path;
 		}
@@ -39,53 +40,63 @@ void run_list(int s, char* arg)
 		path = arg;
 	}
 
-	printf("get directory path:%s\n", path);
-
 	// open directory
 	if(path != NULL){
 		if((dir = opendir(path)) == NULL){
-			err_handler(errno, &header);
-			create_ftp_packet(&header, buf);
-			pkt_size = HEADER_SIZE;
+			err_handler(s, errno);
 		} else {
 			char* p_data = data;
+			char line[DATASIZE];
 			int rest = DATASIZE;
+			struct stat st;
+			struct tm *t;
+
+			// send ok reply
+			send_simple_packet(s, FTP_TYPE_OK, 0x00);
+
+			// create list and send it
 			while((file = readdir(dir)) != NULL){
-				if(strlen(file->d_name)+1 > rest) break;
-				strncpy(p_data, file->d_name, rest);
-				rest -= strlen(file->d_name)+1;
-				p_data += strlen(file->d_name);
+				bzero(line, sizeof(line));
+				if(stat(file->d_name, &st) < 0){
+					continue;
+				}
+				t = localtime(&st.st_mtime);
+				sprintf(line, "%u %lu %d:%d %5ld %2d/%2d %02d:%02d %s", st.st_mode, st.st_nlink, 
+						st.st_uid, st.st_gid, st.st_size, t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, file->d_name);
+
+				if(strlen(line)+1 > rest){
+					// send data block
+					p_data--;
+					(*p_data) = '\0';
+					send_data_packet(s, FTP_TYPE_DATA, 0x01, HEADER_SIZE+strlen(data), data);
+					p_data = data;
+					rest = DATASIZE;
+				}
+
+				strncpy(p_data, line, rest);
+				rest -= strlen(line)+1;
+				p_data += strlen(line);
 				(*p_data++) = '\n';
 			}
 			if(p_data != data){
 				p_data--;
 				(*p_data) = '\0';
 			}
-			header.type = FTP_TYPE_OK;
-			header.length = strlen(data);
-			create_ftp_packet_data(&header, data, buf);
-			pkt_size = HEADER_SIZE + header.length;
+			send_data_packet(s, FTP_TYPE_DATA, 0x00, HEADER_SIZE+strlen(data), data);
 		}
-	}
-
-	if(send(s, buf, pkt_size, 0) < 0){
-		perror("send");
-		exit(1);
 	}
 }
 
-void err_handler(int no, struct myftph* header)
+void err_handler(int s, int no)
 {
 	if(no == EACCES){
 		// permission denied
-		header->type = FTP_TYPE_FILE_ERR;
-		header->code = 0x01;
+		send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x01);
 	} else if(no == ENOENT){
 		// directory does not exist
-		header->type = FTP_TYPE_FILE_ERR;
+		send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x00);
 	} else {
 		// unknown error
-		header->type = FTP_TYPE_UNKWN_ERR;
-		header->code = 0x05;
+		send_simple_packet(s, FTP_TYPE_UNKWN_ERR, 0x05);
 	}
 }

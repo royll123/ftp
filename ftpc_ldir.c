@@ -3,6 +3,9 @@
 #include <string.h>
 #include <strings.h>
 #include <unistd.h>
+#include <time.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <errno.h>
 #include <dirent.h>
 
@@ -37,8 +40,15 @@ void run_ldir(int s, int argc, char* argv[])
 		if((dir = opendir(path)) == NULL){
 			ldir_err_handler(errno);
 		} else {
+			struct stat st;
+			struct tm *t;
 			while((file = readdir(dir)) != NULL){
-				printf("%s\n", file->d_name);
+				if(stat(file->d_name, &st) < 0){
+					continue;
+				}
+				t = localtime(&st.st_mtime);
+				printf("%u %lu %d:%d %5ld %2d/%2d %02d:%02d %s\n", st.st_mode, st.st_nlink,
+						st.st_uid, st.st_gid, st.st_size, t->tm_mon+1, t->tm_mday, t->tm_hour, t->tm_min, file->d_name);
 			}
 		}
 	}
