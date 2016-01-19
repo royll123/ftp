@@ -10,10 +10,8 @@ void run_cd(int s, int argc, char* argv[])
 {
 	struct myftph header;
 	char buf[HEADER_SIZE+1];
-	char buf_data[HEADER_SIZE+DATASIZE+1];
 	bzero(&header, sizeof(header));
 	bzero(buf, sizeof(buf));
-	bzero(buf_data, sizeof(buf_data));
 
 
 	// check args
@@ -22,7 +20,7 @@ void run_cd(int s, int argc, char* argv[])
 		return;
 	}
 
-	send_data_packet(s, FTP_TYPE_CMD_CWD, 0x00, strlen(argv[1]), buf_data);
+	send_data_packet(s, FTP_TYPE_CMD_CWD, 0x00, strlen(argv[1]), argv[1]);
 
 	if(recv(s, buf, HEADER_SIZE, 0) < 0){
 		perror("recv");
