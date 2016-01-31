@@ -5,8 +5,7 @@
 
 #define STAT_INITIAL        0
 #define STAT_WAIT_INPUT     1
-#define STAT_WAIT_REPLY     2
-#define STAT_QUIT			3
+#define STAT_QUIT			2
 
 void output_error(struct myftph*);
 void output_errno(int);

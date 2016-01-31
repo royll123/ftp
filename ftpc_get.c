@@ -14,15 +14,13 @@ void get_dst_filename(char* src, char** dst);
 void run_get(int s, int argc, char* argv[])
 {
 	struct myftph header;
-	char buf[HEADER_SIZE+DATASIZE];
-	char buf_data[HEADER_SIZE+DATASIZE];
-	char data[DATASIZE+1];
+	char buf[HEADER_SIZE];
+	char buf_data[DATASIZE];
 	char *src, *dst;
 	int fd, pkt_size;
 	bzero(&header, sizeof(header));
 	bzero(buf, sizeof(buf));
 	bzero(buf_data, sizeof(buf_data));
-	bzero(data, sizeof(data));
 
 	// set target files
 	if(argc == 2){
@@ -55,19 +53,23 @@ void run_get(int s, int argc, char* argv[])
 	if(header.type == FTP_TYPE_OK){
 		// receive file data
 		while(1){
-			if(recv(s, buf_data, HEADER_SIZE+DATASIZE, 0) < 0){
+			if(recv(s, buf, HEADER_SIZE, 0) < 0){
 				perror("recv");
 				close(fd);
 				exit(1);
 			}
-			read_ftp_packet_data(&header, buf_data, data);
+			read_ftp_packet(&header, buf);
 			if(header.type == FTP_TYPE_DATA){
-				if(write(fd, data, header.length) < 0){
+				if(recv(s, buf_data, header.length, 0) < 0){
+					perror("recv");
+					close(fd);
+					exit(1);
+				}
+				if(write(fd, buf_data, header.length) < 0){
 					perror("write");
 					close(fd);
 					exit(1);
 				}
-				//lseek(fd, header.length, SEEK_CUR);
 				if(header.code == 0x00){
 					break;
 				}

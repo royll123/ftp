@@ -16,6 +16,7 @@ void run_cd(int s, char* arg)
 	}
 
 	// change current directory
+	printf("path:%s\n", arg);
 	errno = 0;
 	if(chdir(arg) < 0){
 		send_err_packet(s, errno);

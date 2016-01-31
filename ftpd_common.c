@@ -11,7 +11,7 @@ void send_err_packet(int s, int no)
 		case EACCES:
 			send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x01);
 			break;
-		case EINTR:
+		case ENOENT:
 			send_simple_packet(s, FTP_TYPE_FILE_ERR, 0x00);
 			break;
 		default:

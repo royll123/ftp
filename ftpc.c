@@ -38,8 +38,6 @@ int main(int argc, char* argv[])
 	struct sockaddr_in skt;
 	struct in_addr ipaddr;
 
-	char pkt_data[sizeof(struct myftph_data)+1];
-	char pkt[sizeof(struct myftph)+1];
 	struct myftph header;
 	struct myftph_data header_data;
 
@@ -92,17 +90,6 @@ int main(int argc, char* argv[])
 				} else {
 					cmd_tbl[func].func(s, agc, agv);
 				}
-				/*bzero(&header, sizeof(header));
-					header.type = 3;
-					header.code = 2;
-					create_ftp_packet(&header, pkt, sizeof(pkt));
-					printf("send:%s\n", pkt);
-					if(send(s, pkt, sizeof(struct myftph), 0) < 0){
-						perror("send");
-						exit(1);
-					}
-					sleep(100);
-					exit(0);*/
 				break;
 
 			case STAT_QUIT:

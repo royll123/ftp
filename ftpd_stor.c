@@ -12,15 +12,13 @@
 void run_stor(int s, char* arg)
 {
 	struct myftph header;
-	char buf[HEADER_SIZE+DATASIZE];
-	char buf_data[HEADER_SIZE+DATASIZE];
-	char data[DATASIZE+1];
+	char buf[HEADER_SIZE];
+	char buf_data[DATASIZE];
 	char *src, *dst;
 	int fd, pkt_size;
 	bzero(&header, sizeof(header));
 	bzero(buf, sizeof(buf));
 	bzero(buf_data, sizeof(buf_data));
-	bzero(data, sizeof(data));
 
 	if(arg == NULL){
 		send_simple_packet(s, FTP_TYPE_CMD_ERR, 0x01);
@@ -39,14 +37,19 @@ void run_stor(int s, char* arg)
 
 	// receive file data
 	while(1){
-		if(recv(s, buf_data, HEADER_SIZE+DATASIZE, 0) < 0){
+		if(recv(s, buf, HEADER_SIZE, 0) < 0){
 			perror("recv");
 			close(fd);
 			exit(1);
 		}
-		read_ftp_packet_data(&header, buf_data, data);
+		read_ftp_packet(&header, buf);
 		if(header.type == FTP_TYPE_DATA){
-			if(write(fd, data, header.length) < 0){
+			if(recv(s, buf_data, header.length, 0) < 0){
+				perror("recv");
+				close(fd);
+				exit(1);
+			}
+			if(write(fd, buf_data, header.length) < 0){
 				perror("write");
 				close(fd);
 				exit(1);

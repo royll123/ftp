@@ -35,6 +35,7 @@ void output_error(struct myftph* h)
 			break;
 		default:
 			// this header may not be error.
+			fprintf(stderr, "Protocol error.\n");
 			break;
 	}
 }

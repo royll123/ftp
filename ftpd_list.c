@@ -43,6 +43,7 @@ void run_list(int s, char* arg)
 	// open directory
 	if(path != NULL){
 		if((dir = opendir(path)) == NULL){
+			printf("%d\n", errno);
 			send_err_packet(s, errno);
 		} else {
 			char* p_data = data;
@@ -70,6 +71,7 @@ void run_list(int s, char* arg)
 					(*p_data) = '\0';
 					send_data_packet(s, FTP_TYPE_DATA, 0x01, strlen(data), data);
 					p_data = data;
+					(*p_data) = '\0';
 					rest = DATASIZE;
 				}
 

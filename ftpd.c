@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 	struct sockaddr_in skt;
 	socklen_t sktlen = sizeof(skt);
 	
-	char pkt_data[HEADER_SIZE+DATASIZE+1];
+	char pkt_data[HEADER_SIZE];
 	char pkt[HEADER_SIZE+1];
 	struct myftph header;
 	char ftp_data[DATASIZE+1];
@@ -107,20 +107,32 @@ int main(int argc, char* argv[])
 			{
 				int cmd_type;
 				bzero(pkt_data, sizeof(pkt_data));
-				if((r = recv(s2, pkt_data, HEADER_SIZE+DATASIZE, 0)) < 0){
+				if((r = recv(s2, pkt_data, HEADER_SIZE, 0)) < 0){
 					perror("recv");
 					close(s2);
 					exit(1);
 				}
-				read_ftp_packet_data(&header, pkt_data, ftp_data);
+				read_ftp_packet(&header, pkt_data);
 				cmd_type = getcmd(header.type);
 				if(cmd_tbl[cmd_type].type == -1){
 					// invalid type of ftp header
-					send_simple_packet(s2, FTP_TYPE_CMD_ERR, 0x03);
+					if(header.type == FTP_TYPE_OK || header.type == FTP_TYPE_CMD_ERR ||
+						header.type == FTP_TYPE_FILE_ERR || header.type == FTP_TYPE_UNKWN_ERR ||
+						header.type == FTP_TYPE_DATA){
+						send_simple_packet(s2, FTP_TYPE_CMD_ERR, 0x03);
+					} else {
+						send_simple_packet(s2, FTP_TYPE_CMD_ERR, 0x02);
+					}
 				} else {
 					if(header.length == 0){
 						cmd_tbl[cmd_type].func(s2, NULL);
 					} else {
+						if(recv(s2, ftp_data, header.length, 0) < 0){
+							perror("recv");
+							close(s2);
+							exit(1);
+						}
+						ftp_data[header.length] = '\0';
 						cmd_tbl[cmd_type].func(s2, ftp_data);
 					}
 				}

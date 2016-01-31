@@ -37,14 +37,21 @@ void run_dir(int s, int argc, char* argv[])
 
 	if(header.type == FTP_TYPE_OK){
 		while(1){
-			if(recv(s, buf_data, HEADER_SIZE+DATASIZE, 0) < 0){
+			bzero(buf_data, sizeof(buf_data));
+			if(recv(s, buf, HEADER_SIZE, 0) < 0){
 				perror("recv");
 				close(s);
 				exit(1);
 			}
-			read_ftp_packet_data(&header, buf_data, data);
+			read_ftp_packet(&header, buf);
 			if(header.type == FTP_TYPE_DATA){
-				printf("%s\n", data);
+				if(recv(s, buf_data, header.length, 0) < 0){
+					perror("recv");
+					close(s);
+					exit(1);
+				}
+				buf_data[header.length] = '\0';
+				printf("%s\n", buf_data);
 				if(header.code == 0x00) break;
 			} else{
 				fprintf(stderr, "Unexpected error occuered.\n");
